@@ -1,0 +1,15 @@
+[Unit]
+Description=Flightscope boot picture (the splash's first frame, saved by the app)
+DefaultDependencies=no
+RequiresMountsFor=/data
+ConditionPathExists=/data/cache/bootsplash.fb
+After=local-fs.target
+Before=sysinit.target
+
+[Service]
+Type=oneshot
+# the DSI panel's fb0 turns up a moment into boot; wait for it (up to 10 s), hide the console cursor, show the picture
+ExecStart=/bin/sh -c 'for i in $(seq 50); do [ -e /dev/fb0 ] && break; sleep 0.2; done; printf "\033[?25l" > /dev/tty1; cat /data/cache/bootsplash.fb > /dev/fb0'
+
+[Install]
+WantedBy=sysinit.target

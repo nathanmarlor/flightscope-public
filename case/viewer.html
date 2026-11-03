@@ -1,0 +1,325 @@
+<title>Flightscope Assembly</title>
+<style>
+:root{--bg:#eef1f4;--panel:#ffffff;--ink:#101820;--ink2:#3a4855;--muted:#5d6b78;--rule:#d2d9df;--accent:#e08a1e;--accent-ink:#8a4d00;--chip:#e6ebf0;
+      --f:'Nunito','Segoe UI',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d141b;--panel:#151e27;--ink:#e6ecf1;--ink2:#c0ccd6;--muted:#8b9ba9;--rule:#253442;--accent:#f0a24a;--accent-ink:#f5c98a;--chip:#1e2a35}}
+:root[data-theme="dark"]{--bg:#0d141b;--panel:#151e27;--ink:#e6ecf1;--ink2:#c0ccd6;--muted:#8b9ba9;--rule:#253442;--accent:#f0a24a;--accent-ink:#f5c98a;--chip:#1e2a35}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);height:100vh;overflow:hidden}
+#stage{position:fixed;inset:0;left:320px}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none}
+aside{position:fixed;left:0;top:0;bottom:0;width:320px;background:var(--panel);border-right:1px solid var(--rule);overflow-y:auto;padding:18px 18px 28px}
+h1{font-size:19px;margin:0 0 2px;letter-spacing:-.01em}
+.sub{font-size:12.5px;color:var(--muted);margin-bottom:14px;font-family:var(--mono)}
+.row{display:flex;gap:8px;align-items:center;margin:10px 0}
+button{font:700 13px var(--f);border:1.5px solid var(--rule);background:var(--panel);color:var(--ink);padding:8px 12px;border-radius:9px;cursor:pointer}
+button:hover{border-color:var(--accent)} button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+input[type=range]{width:100%;accent-color:var(--accent)}
+label.chk{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink2);cursor:pointer}
+h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
+ol.parts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+ol.parts li{display:grid;grid-template-columns:22px 26px 1fr;gap:8px;align-items:start;padding:7px 8px;border-radius:9px;cursor:pointer;border:1.5px solid transparent}
+ol.parts li:hover{background:var(--chip)} ol.parts li.sel{border-color:var(--accent);background:var(--chip)}
+ol.parts li input{margin:3px 0 0}
+.num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-weight:900;font-size:13px;display:grid;place-items:center}
+.num.blank{background:var(--chip);color:var(--muted);font-size:11px}
+.pname{font-weight:800;font-size:13.5px} .pnote{font-size:12px;color:var(--muted);line-height:1.35;margin-top:2px}
+.batt{background:var(--chip);border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.45;color:var(--ink2)}
+.batt b{color:var(--ink)}
+.dims{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+#hud{position:fixed;right:14px;top:12px;background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:8px 12px;font-size:12.5px;color:var(--ink2);max-width:320px;display:none}
+#hud b{color:var(--ink)}
+#help{position:fixed;right:14px;bottom:12px;font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+#menu{display:none;position:fixed;left:12px;top:12px;z-index:3}
+@media (max-width:760px){aside{width:min(88vw,320px);transform:translateX(-100%);transition:transform .2s;z-index:2}aside.open{transform:none}#stage{left:0}#menu{display:block}}
+@media (prefers-reduced-motion:reduce){aside{transition:none}}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=IBM+Plex+Mono&display=swap">
+<button id="menu">☰ Parts</button>
+<aside id="side">
+  <h1>Flightscope Mk I</h1>
+  <div class="sub">assembly · 126 × 99 × 75 mm · drag to orbit, wheel/pinch to zoom, right-drag to pan</div>
+  <div class="row"><button class="primary" id="btnAssemble">Assemble</button><button id="btnExplode">Explode</button><button id="btnReset">Reset view</button></div>
+  <input type="range" id="explode" min="0" max="1" step="0.005" value="1" aria-label="Explode amount">
+  <div class="row"><label class="chk"><input type="checkbox" id="xray" checked> X-ray the printed parts</label></div>
+  <h2>Parts — in build order</h2>
+  <ol class="parts" id="parts"></ol>
+  <h2>Wiring</h2>
+  <ol class="parts" id="wires"></ol>
+  <h2>Screws &amp; inserts</h2>
+  <ol class="parts" id="screws"></ol>
+  <h2>Batteries</h2>
+  <div class="batt"><b>2 × Molicel INR21700‑P42A</b> (4200 mAh, flat top, unprotected — the UPS HAT's own BMS handles protection). They sit in the HAT's two spring holders, in parallel, right at the <b>back</b> of the case behind the HAT board — the thickest things in the box (21.7 mm) and the reason it's 73 mm deep. Negative end into the spring first, + to the marked contact. Samsung 50E (5000 mAh) or 40T are fine swaps. Charge through the USB‑C socket on the back: any phone charger, ~4–5 h from flat, runs while charging.</div>
+  <h2>Print</h2>
+  <div class="dims">PETG · 0.2 mm · 4 walls · 25% gyroid<br>front shell face-down · cover inner-face up · mid-frame flat<br>no supports on any part</div>
+</aside>
+<div id="stage"></div>
+<div id="hud"></div>
+<div id="help">click a part · esc clears</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="viewer_parts.js"></script>
+<script src="viewer_layout.js"></script>
+<script>
+(function(){
+const L = window.FLIGHTSCOPE_LAYOUT;
+const PARTS = [
+  {id:'front_shell', n:'1', name:'Front shell',     note:'Print face-down. Heat-set inserts: 4 in the bezel pillars, 4 in the rear bosses, one in each corner. The 12 mm power switch is at the right end of the top wall, the SMA bulkhead (6.6 mm hole, nut inside) right behind it toward the back; the antenna screws onto it outside. Side vents.', col:0xc9d3dc, printed:true,  ex:[0,0,0]},
+  {id:'button',      n:'',  name:'Power switch (12 mm latching, top wall)', note:'Push-on / push-off, beside the SMA. Two pins, no LED, so no 5 V. Leave the HAT’s slide switch at OFF and solder the switch’s two pins to the slide switch’s centre (EN) leg and its ON leg: latched in is on, out is off. It only carries the enable signal, so thin wire is fine.', col:0xe08a1e, ex:[0,30,0]},
+  {id:'display',     n:'2', name:'4.3" DSI display', note:'In from the back, glass into the bezel pocket. Its DSI socket is on the back, left side — plug the ribbon in and fold it back before the mid-frame goes on.', col:0x222a33, ex:[0,0,60]},
+  {id:'mid_frame',   n:'3', name:'Mid-frame',       note:'4 × M3 × 6 into the pillars — clamps the display against the bezel. Print this first as the fit test.', col:0xc9d3dc, printed:true, ex:[0,0,95]},
+  {id:'pi',          n:'4', name:'Raspberry Pi 4',  note:'Component side toward the screen. Sits on the four pogo standoffs and is bolted down through its own holes with 4 × M2.5 (kit screws). With the cover turned: GPIO header along the bottom edge, its USB-C power / micro-HDMI edge along the top, SD card and DSI socket at the left (the ribbon comes forward to the display’s socket on the same side), USB/Ethernet facing the right wall. The right-angle USB-A extension plugs into the upper port of the middle (blue) USB3 pair, lead toward the cover: in the black USB2 pair it would sit under the switch.', col:0x2e7d4f, ex:[0,0,140]},
+  {id:'standoffs',   n:'5', name:'Hex standoffs ×4 — M2.5 × 9 F‑F (kit)', note:'Sit on top of the HAT at its four corners; the Pi bolts down into them. The 25 mm studs below the HAT screw up into their underside, clamping the HAT between. The pogo-pin block on the HAT presses 5 V into pads on the Pi’s underside — no power cable.', col:0xc9a34d, ex:[0,0,170]},
+  {id:'hat',         n:'6', name:'UPS HAT (D)',     note:'Its ports are on the Pi’s USB-C / HDMI edge, along the top with the cover turned. The rigid USB-C elbow sits in the HAT’s own port with its socket facing sideways; the charge cable from the rear socket plugs into that. Slide switch left at OFF, the panel switch soldered across its centre and ON legs.', col:0x2b5a9e, ex:[0,0,195]},
+  {id:'studs',       n:'7', name:'Hex studs ×4 — M2.5 × 25 M‑F (kit)', note:'These normally hold Waveshare’s acrylic plate; here they hold the whole stack. Male 6 mm end goes UP through the HAT into the 9 mm standoff; the female end sits 0.6 mm off the rear cover and takes the 4 cover screws.', col:0xc9a34d, ex:[0,0,215]},
+  {id:'cells',       n:'8', name:'21700 cells ×2', note:'Into the HAT holders, negative end into the spring first. These sit at the very back.', col:0x3aa79c, ex:[0,0,230]},
+  {id:'dongle',      n:'9', name:'Pro Stick Plus',  note:'Stands on its long edge along the bottom of the box (the cover is turned), in the cover’s clip cradle: a right-angle SMA adapter on its jack (right-hand end) points the pigtail toward the screen, and the pigtail runs up the right-hand side to the bulkhead behind the switch. Drop it in between the outer rail and the three snap hooks until they click over its front edge; its USB plug passes through the slot in the left-hand stop, the extension’s female end goes onto it, and the lead runs along the bottom in front of the stick and up to the Pi’s USB ports at the right. Its SMA end bears on two pillars either side of the jack; the plug’s knurled nut sits between them.', col:0x1f6fd6, ex:[0,L.COVER_ROT === 180 ? -40 : 40,270]},
+  {id:'rear_cover',  n:'10', name:'Rear cover',      note:'Goes on turned 180° (the four corner screws fit either way): the GPS posts along the top edge, the USB-C charge socket at the top right (screwed on from outside), the stick’s cradle along the bottom. No slots: it is the stack’s mounting plate. The Pi/HAT stack is NOT loose: it bolts to this cover — on the bench, cover face down, stack on its four bosses, 4 × M2.5 × 8 countersunk from the back into the female ends of the 25 mm studs. Then plug the DSI ribbon, lower the whole lot in and fit the 4 corner screws (M3 × 8 countersunk). A 2 mm lip round the inside drops it into place before the screws go in. One lanyard loop on the left side, his name bottom right.', col:0xc9d3dc, printed:true, ex:[0,0,320]},
+  {id:'gps',          n:'',  name:'GPS — Adafruit Ultimate GPS Breakout (rear cover, top-left corner, standing upright)', note:'Stands upright on its short edge in the top-left corner, the brown ceramic patch (the antenna) facing OUT through the top wall at the sky, the header end toward the screen. Both long edges slide down grooves in two full-height posts; a dab of hot glue at the top if it rattles. Nothing touches the component faces. Leads go across the Pi’s face to its GPIO header on the bottom edge.', col:0x7a5cff, ex:[0,0,320]},
+  {id:'panel_socket', n:'',  name:'USB-C charge socket (rear cover, top right)', note:'Panel-mount extension turned 90°, flange on a pad inside the cover, 2 × M3 × 8 countersunk from the back into its ears. Only the slot shows from outside. Its lead runs along the top band to the right-angle adapter in the HAT’s port.', col:0x1a1a1a, ex:[0,0,320]},
+];
+// PX/PY map the Pi’s own frame (x from the SD end, y from the edge opposite the GPIO) into the cover’s frame
+const PX = (x, w = 0) => L.STACK_X + L.PI_W - x - w, PY = (y, h = 0) => L.STACK_Y + y;
+// the cover goes on turned (L.COVER_ROT): everything riding on it is laid out in the cover’s own frame here, and turned into the box below
+const ON_COVER = new Set(['pi', 'standoffs', 'hat', 'studs', 'cells', 'dongle', 'rear_cover', 'gps', 'panel_socket']), rot = L.COVER_ROT === 180;
+const cp = (h, [x, y, z]) => rot && ON_COVER.has(h) ? [L.OUT_W - x, L.OUT_H - y, z] : [x, y, z];
+const yD = L.DISP_Y + L.DISPLAY_H / 2, yPi = PY(24.5), zDg = L.Z_COVER - L.DONGLE_W / 2;
+// small parts built from primitives; each rides with its host when exploding
+const EXTRAS = [
+  {id:'disp_socket',  host:'display',     name:'Display DSI socket',                 box:[L.DSI_LEN,5,L.DSI_H], at:[L.DISP_X+L.DSI_X, L.DISP_Y+L.DSI_Y, L.Z_PCB+L.DISPLAY_PCB_T],           col:0xd9dde3},
+  {id:'pi_dsi',       host:'pi',          name:'Pi DSI socket',                      box:[5,17,5.5], at:[PX(2,5), yPi-8.5, L.Z_PI_TOP-5.5],                 col:0xd9dde3},
+  ...(L.USB_LINK === 'cable' ? [
+  {id:'usb_elbow',    host:'pi',          name:'USB-A right-angle extension, elbow end (upper port of the blue USB3 pair, lead toward the cover)', box:[L.USB_ELBOW-2,L.USB_ELBOW_W,7], at:[L.STACK_X-L.USB_ELBOW, PY(L.USB_PORT_Y), L.Z_PI_TOP-11.5], col:0x2b2b2b},
+  {id:'usb_female',   host:'dongle',      name:'USB-A extension, right-angle female block on the stick’s plug (lead leaves it toward the bezel)', box:[L.USB_FEMALE+8,L.USB_FEMALE_T,L.USB_FEMALE_H], at:[L.DONGLE_X+L.DONGLE_L+L.DONGLE_PLUG-8, L.DONGLE_Y+L.DONGLE_T/2-L.USB_FEMALE_T/2, zDg-L.USB_FEMALE_H/2], col:0x2b2b2b},
+  ] : [
+  {id:'usb_fpc_plug', host:'pi',          name:'USB ribbon, plug end (top USB2 port)', box:[L.USB_FPC_PLUG,13,5.5], at:[L.STACK_X-2-L.USB_FPC_PLUG, PY(2.5,13), L.Z_PI_TOP-14.5], col:0x2b2b2b},
+  {id:'dongle_plug',  host:'dongle',      name:'Pro Stick USB-A plug',               box:[L.DONGLE_PLUG,4.5,12], at:[L.DONGLE_X+L.DONGLE_L, L.DONGLE_Y+4.2, zDg-6],       col:0xc9c9c9},
+  {id:'usb_socket',   host:'dongle',      name:'USB ribbon, socket end (in the cover pocket)', box:[L.USB_SOCKET_L,L.USB_SOCKET_T,L.USB_SOCKET_W], at:[L.DONGLE_X+L.DONGLE_L+1, L.DONGLE_Y+L.DONGLE_T/2-L.USB_SOCKET_T/2, zDg-L.USB_SOCKET_W/2], col:0x2b2b2b},
+  ]),
+  {id:'dongle_sma',   host:'dongle',      name:'Pro Stick SMA jack', cyl:[3.15,L.SMA_JACK], axis:'x', at:[L.DONGLE_X-L.SMA_JACK/2, L.DONGLE_Y+L.DONGLE_T/2, zDg], col:0xc9a34d},
+  {id:'hat_switch',   host:'hat',         name:'HAT slide-switch pads (switch removed; three leads to the panel button)', box:[6,3,4], at:[PX(L.HAT_BTN_X[0],6), L.STACK_Y-3, L.Z_HAT_TOP-4], col:0x1a1a1a},
+  {id:'pogo',         host:'hat',         name:'Pogo-pin block — 5 V + GND up into the Pi’s underside pads', box:[6,10,9], at:[PX(9,6), PY(4,10), L.Z_HAT_TOP-9], col:0x1a1a1a},
+  ...(L.ANT_PLUG === 'bulkhead' ? [
+  {id:'ant_plug',     host:'dongle',      name:'Right-angle SMA adapter on the stick’s jack (nut between the two end pillars)', cyl:[4.25,L.ANT_RA_X+4.2], axis:'x', at:[L.DONGLE_X-(L.ANT_RA_X+4.2)/2-0.3, L.SMA_Y, L.SMA_Z], col:0xc9a34d},
+  {id:'ant_leg',      host:'dongle',      name:'Its leg, pointing toward the screen', cyl:[4.25,L.ANT_RA_LEG], axis:'z', at:[L.DONGLE_X-L.ANT_RA_X, L.SMA_Y, L.SMA_Z-L.ANT_RA_LEG/2], col:0xc9a34d},
+  {id:'ant_pig_plug', host:'dongle',      name:'Pigtail’s SMA plug on the adapter', cyl:[4.0,L.ANT_PIG_PLUG], axis:'z', at:[L.DONGLE_X-L.ANT_RA_X, L.SMA_Y, L.SMA_Z-L.ANT_RA_LEG-L.ANT_PIG_PLUG/2], col:0x333333},
+  {id:'bulkhead',     host:'front_shell', name:'SMA female bulkhead through the top wall right behind the switch, nut inside; 1090 MHz SMA-male antenna outside', cyl:[3.2,L.SMA_BH_IN+6], axis:'y', at:[L.SMA_TOP_X, L.OUT_H-L.WALL-(L.SMA_BH_IN+6)/2+6, L.SMA_TOP_Z], col:0xc9a34d},
+  ] : L.ANT_PLUG === 'inside' ? [
+  {id:'ant_plug',     host:'dongle',      name:'Antenna lead’s SMA plug, on the stick’s jack inside the box (nut between the two end pillars)', cyl:[4.25,L.ANT_PLUG_L-0.3], axis:'x', at:[L.DONGLE_X-L.ANT_PLUG_L/2, L.SMA_Y, L.SMA_Z], col:0xc9a34d},
+  ] : [
+  {id:'ant_plug',     host:'dongle',      name:'Antenna lead’s SMA plug, outside the left wall on the stick’s jack', cyl:[4.0,9], axis:'x', at:[L.DONGLE_X-L.SMA_JACK-2, L.SMA_Y, L.SMA_Z], col:0xc9a34d},
+  ]),
+  {id:'btn_ring',     host:'front_shell', name:'Power switch ring nut (inside the top wall)', cyl:[L.BTN_D/2+1.5,3], axis:'y', at:[L.BTN_X, L.OUT_H-L.WALL-1.5, L.BTN_Z], col:0x2b2b2b},
+  {id:'usbc_elbow',   host:'hat',         name:'USB-C right-angle adapter (in the HAT port, socket facing sideways)', box:[13,9,9], at:[PX(L.HAT_USBC_X[0]-0.5,13), L.STACK_Y-15.5, L.Z_HAT_TOP-9], col:0x4a4a5a},
+
+];
+// heat-set inserts: brass, M3, 4.2-4.6 OD x 4-6 long — pressed into the pillar tops and the rim bosses with a soldering iron
+const INSERTS = [
+  {id:'ins_pillars', host:'front_shell', name:'4 × M3 heat-set inserts — bezel pillar tops (mid-frame screws)', pts:L.PILLARS.map(([x,y]) => [x, y, L.Z_MID - 4])},
+  {id:'ins_rim',     host:'front_shell', name:'4 × M3 heat-set inserts — rear bosses, one in each corner (rear cover screws)',        pts:L.RIM_BOSSES.map(([x,y]) => [x, y, L.Z_COVER - 4])},
+];
+// screws: head sits on the face at z, shaft runs dir (+1 toward the back, -1 toward the screen); one merged mesh per set
+const SCREWS = [
+  {id:'scr_mid',   host:'mid_frame',  name:'4 × M3 × 6 pan — mid-frame → bezel pillar inserts (from behind)', len:6, dir:-1,
+   pts:L.PILLARS.map(([x,y]) => [x, y, L.Z_MID + L.MID_T])},
+  {id:'scr_pi',    host:'pi',         name:'4 × M2.5 × 5 pan (kit) — Pi → 9 mm standoffs, from the component side', len:5, dir:1,
+   pts:L.PI_HOLES.map(([x,y]) => [PX(x), PY(y), L.Z_PI_TOP])},
+  {id:'scr_stack', host:'rear_cover', name:'4 × M2.5 × 8 countersunk — rear cover → female ends of the 25 mm hex studs. These carry the Pi/HAT stack.', len:8, dir:-1, csk:true,
+   pts:L.PI_HOLES.map(([x,y]) => [PX(x), PY(y), L.OUT_D])},
+  {id:'scr_rim',   host:'rear_cover', name:'4 × M3 × 8 countersunk — rear cover → the corner inserts (flush heads)', len:8, dir:-1, csk:true,
+   pts:L.RIM_BOSSES.map(([x,y]) => [x, y, L.OUT_D])},
+  {id:'scr_usbc',  host:'rear_cover', name:'2 × M3 × 8 countersunk — from the back through the cover pad into the USB-C flange’s ears', len:8, dir:-1, csk:true,
+   pts:L.PANEL_USBC_HOLES.map(([dx,dz]) => [L.PANEL_USBC_XY[0] + dx, L.PANEL_USBC_XY[1] + dz, L.OUT_D])},
+];
+if (rot) {
+  for (const e of EXTRAS) if (ON_COVER.has(e.host)) e.at = e.box ? [L.OUT_W - e.at[0] - e.box[0], L.OUT_H - e.at[1] - e.box[1], e.at[2]] : cp(e.host, e.at);
+  for (const s of SCREWS) s.pts = s.pts.map(q => cp(s.host, q));
+}
+function mergeGeoms(gs){
+  const arrs = gs.map(g => g.toNonIndexed().getAttribute('position').array); const pos = new Float32Array(arrs.reduce((s, a) => s + a.length, 0));
+  let o = 0; for (const a of arrs) { pos.set(a, o); o += a.length; }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.computeVertexNormals(); return g;
+}
+function screwGeom(s){
+  const gs = [], ax = s.axis === 'x', ay = s.axis === 'y';   // shaft along z by default, or along x / y
+  const orient = g => { if (ax) g.rotateZ(Math.PI / 2); else if (!ay) g.rotateX(Math.PI / 2); return g; };
+  const put = (g, x, y, z, d) => { if (ax) g.translate(x + d, y, z); else if (ay) g.translate(x, y + d, z); else g.translate(x, y, z + d); return g; };
+  for (const [x, y, z] of s.pts) {
+    gs.push(put(orient(new THREE.CylinderGeometry(1.25, 1.25, s.len, 12)), x, y, z, s.dir * s.len / 2));
+    const head = s.csk ? new THREE.CylinderGeometry(s.dir > 0 ? 1.3 : 2.5, s.dir > 0 ? 2.5 : 1.3, 1.6, 16) : new THREE.CylinderGeometry(2.25, 2.25, 1.8, 16);
+    gs.push(put(orient(head), x, y, z, s.csk ? s.dir * 0.8 : -s.dir * 0.9));
+  }
+  return mergeGeoms(gs);
+}
+for (const i of INSERTS) EXTRAS.push({id:i.id, host:i.host, name:i.name, col:0xb8863b, screw:true,
+  geom:mergeGeoms(i.pts.map(([x, y, z]) => { const g = new THREE.CylinderGeometry(1.75, 1.75, 4, 16); g.rotateX(Math.PI / 2); g.translate(x, y, z + 2); return g; }))});
+for (const s of SCREWS) EXTRAS.push({id:s.id, host:s.host, name:s.name, geom:screwGeom(s), col:0x8a9099, screw:true});
+// cables: waypoints pinned to hosts, so an exploded view stretches them between what they connect
+const CABLES = [
+  {id:'dsi',    name:'DSI ribbon — display socket → Pi DSI socket (12 cm, supplied with the display)', flat:16, col:0xd98a2b,
+   pts:[['display',[L.DISP_X+8, yD, L.Z_PCB+L.DISPLAY_PCB_T+4]], ['display',[L.DISP_X+1, yD, L.Z_PCB+12]], ['pi',[L.STACK_X+L.PI_W+2, yPi, L.Z_PI_TOP-9]], ['pi',[PX(4), yPi, L.Z_PI_TOP-3]]]},
+  ...(L.USB_LINK === 'cable' ? [
+  {id:'usb',    name:'USB — the Pi’s upper blue USB3 port (right-hand end) → right-angle extension → down past the end of the stack, along the bottom in front of the stick → right-angle female block on the Pro Stick', r:2.5, col:0x202020,
+   pts:[['pi',[L.STACK_X-12, PY(L.USB_PORT_Y+8), L.Z_PI_TOP-8]], ['pi',[L.STACK_X-14, L.STACK_Y+L.PI_H+2, L.Z_PI_TOP+4]], ['dongle',[L.STACK_X-10, L.DONGLE_Y+L.DONGLE_T/2, zDg-L.USB_FEMALE_H/2-11]], ['dongle',[L.DONGLE_X+L.DONGLE_L+L.DONGLE_PLUG+1, L.DONGLE_Y+L.DONGLE_T/2, zDg-L.USB_FEMALE_H/2-11]], ['dongle',[L.DONGLE_X+L.DONGLE_L+L.DONGLE_PLUG+1, L.DONGLE_Y+L.DONGLE_T/2, zDg-L.USB_FEMALE_H/2-6]], ['dongle',[L.DONGLE_X+L.DONGLE_L+L.DONGLE_PLUG+1, L.DONGLE_Y+L.DONGLE_T/2, zDg-L.USB_FEMALE_H/2]]]},
+  ] : [
+  {id:'usb',    name:'USB ribbon — Pi top USB2 port → flat FPC extension → socket in the cover pocket → Pro Stick plug', flat:10, col:0x202020,
+   pts:[['pi',[L.STACK_X-L.USB_FPC_PLUG-2, PY(9), L.Z_PI_TOP-12]], ['pi',[L.STACK_X-10, PY(30), L.Z_PI_TOP+4]], ['dongle',[L.OUT_W-L.WALL-4, L.DONGLE_Y-10, L.Z_COVER-22]], ['dongle',[L.DONGLE_X+L.DONGLE_L+L.POCKET_L+1, L.DONGLE_Y+L.DONGLE_T/2+2, zDg]]]},
+  ]),
+  ...(L.ANT_PLUG !== 'outside' ? [
+  ...(L.ANT_PLUG === 'bulkhead' ? [
+  {id:'sma',    name:'Bulkhead pigtail — plug on the right-angle adapter at the stick’s jack (bottom right), up the right-hand side in front of the USB plug to the bulkhead behind the switch (~15 cm); the antenna screws on outside', r:1.5, col:0x333333,
+   pts: rot ? (() => { const lx = L.OUT_W - L.WALL - 5.3, yc = L.OUT_H - L.WALL - L.BTN_BODY_L - 1.5, pz = L.SMA_Z - L.ANT_RA_LEG - L.ANT_PIG_PLUG, py = L.OUT_H - L.SMA_Y;
+     return [['dongle',[L.DONGLE_X-L.ANT_RA_X, L.SMA_Y, pz]], ['front_shell',[lx, py, pz-2]], ['front_shell',[lx, yc, pz-2]], ['front_shell',[lx, yc, L.SMA_TOP_Z]], ['front_shell',[L.SMA_TOP_X, yc, L.SMA_TOP_Z]], ['front_shell',[L.SMA_TOP_X, L.OUT_H-L.WALL-L.SMA_BH_IN, L.SMA_TOP_Z]]]; })() : [['dongle',[L.DONGLE_X-L.ANT_RA_X, L.SMA_Y, L.SMA_Z-L.ANT_RA_LEG-L.ANT_PIG_PLUG]], ['dongle',[L.DONGLE_X-L.ANT_RA_X+6, L.SMA_Y, L.SMA_Z-L.ANT_RA_LEG-L.ANT_PIG_PLUG-1]], ['front_shell',[L.SMA_TOP_X-8, L.SMA_Y, L.SMA_TOP_Z-3]], ['front_shell',[L.SMA_TOP_X, L.OUT_H-L.WALL-L.SMA_BH_IN, L.SMA_TOP_Z]]]},
+  ] : [
+  {id:'sma',    name:'Antenna lead — its SMA plug is on the stick’s jack inside; the lead leaves through the left-wall slot', r:1.5, col:0x333333,
+   pts:[['dongle',[L.DONGLE_X-L.ANT_PLUG_L+0.5, L.SMA_Y, L.SMA_Z]], ['dongle',[-4, L.SMA_Y, L.SMA_Z]], ['dongle',[-16, L.SMA_Y-4, L.SMA_Z-8]], ['dongle',[-26, L.SMA_Y-10, L.SMA_Z-16]]]},
+  ]),
+  ] : [
+  {id:'sma',    name:'Antenna lead — screws onto the stick’s jack outside the left wall', r:1.5, col:0x333333,
+   pts:[['dongle',[L.DONGLE_X-L.SMA_JACK-6, L.SMA_Y, L.SMA_Z]], ['dongle',[L.DONGLE_X-L.SMA_JACK-20, L.SMA_Y, L.SMA_Z]], ['dongle',[L.DONGLE_X-L.SMA_JACK-32, L.SMA_Y-4, L.SMA_Z-8]], ['dongle',[L.DONGLE_X-L.SMA_JACK-40, L.SMA_Y-10, L.SMA_Z-16]]]},
+  ]),
+  {id:'charge', name:'Charging — rear USB-C socket → short loop → right-angle adapter in the HAT port', r:1.9, col:0x202020,
+   pts:[['rear_cover',[L.PANEL_USBC_XY[0], L.PANEL_USBC_XY[1], L.Z_COVER-L.PANEL_USBC_PAD-12]], ['rear_cover',[L.PANEL_USBC_XY[0]+6, L.WALL+9, L.Z_COVER-22]], ['hat',[PX(L.HAT_USBC_X[0]+41)-2, L.STACK_Y-11, L.Z_HAT_TOP-4.5]]]},
+  {id:'gpswire', name:'GPS leads — module → Pi GPIO header (3V3, GND, TX, RX), from its top end across the Pi’s face to the header on its far edge', r:1.1, col:0x7a5cff,
+   pts:[['rear_cover',[L.GPS_X+L.GPS_W/2, L.GPS_PCB_Y+1, L.GPS_Z_BOT-L.GPS_H-2]], ['rear_cover',[L.GPS_X+L.GPS_W/2, L.GPS_PCB_Y+9, L.Z_PI_TOP-2]], ['pi',[PX(8), L.STACK_Y-2, L.Z_PI_TOP-14]], ['pi',[PX(8), PY(L.PI_H-3), L.Z_PI_TOP-14]], ['pi',[PX(8), PY(L.PI_H-3), L.Z_PI_TOP-8]]]},
+  {id:'switch', name:'Power switch leads — panel button → the HAT slide switch’s centre (EN) and ON legs', r:1.0, col:0xb03030,
+   pts: rot ? [['front_shell',[L.BTN_X, L.OUT_H-L.WALL-20, L.BTN_Z]], ['front_shell',[L.BTN_X-6, L.OUT_H-L.WALL-20, L.BTN_Z+12]], ['hat',[PX(L.HAT_BTN_X[1]+2), L.STACK_Y-2, L.Z_HAT_TOP-2]]]
+            : [['front_shell',[L.BTN_X, L.OUT_H-L.WALL-22, L.BTN_Z]], ['front_shell',[L.BTN_X-10, L.STACK_Y+L.PI_H+2, L.Z_HAT_TOP-2]], ['hat',[L.STACK_X+L.PI_W+4, L.STACK_Y+10, L.Z_HAT_TOP-2]], ['hat',[PX(L.HAT_BTN_X[1]+2), L.STACK_Y-2, L.Z_HAT_TOP-2]]]},
+];
+if (rot) for (const c of CABLES) c.pts = c.pts.map(([h, q]) => [h, cp(h, q)]);
+// ---------- STL (binary or ascii) -> BufferGeometry ----------
+function parseSTL(bytes){
+  const head = new TextDecoder().decode(bytes.subarray(0, 80));
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let pos;
+  if (head.startsWith('solid') && !(bytes.length === 84 + dv.getUint32(80, true) * 50)) {
+    const txt = new TextDecoder().decode(bytes); const v = []; const re = /vertex\s+([-\d.eE+]+)\s+([-\d.eE+]+)\s+([-\d.eE+]+)/g; let m;
+    while ((m = re.exec(txt))) v.push(+m[1], +m[2], +m[3]);
+    pos = new Float32Array(v);
+  } else {
+    const n = dv.getUint32(80, true); pos = new Float32Array(n * 9); let o = 84;
+    for (let i = 0; i < n; i++) { o += 12; for (let k = 0; k < 9; k++) { pos[i * 9 + k] = dv.getFloat32(o, true); o += 4; } o += 2; }
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.computeVertexNormals(); return g;
+}
+function b64(s){ const bin = atob(s); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+// ---------- scene ----------
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, 1, 1, 5000);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 0.9));
+const key = new THREE.DirectionalLight(0xffffff, 0.8); key.position.set(-200, 300, -260); scene.add(key);
+const fill = new THREE.DirectionalLight(0xffffff, 0.35); fill.position.set(250, 120, 300); scene.add(fill);
+const root = new THREE.Group(); scene.add(root);
+const meshes = {}, byId = {};
+function mat(col, opts){ return new THREE.MeshStandardMaterial(Object.assign({color:col, roughness:0.55, metalness:0.05, transparent:true, opacity:1}, opts || {})); }
+for (const p of PARTS) {
+  const m = new THREE.Mesh(parseSTL(b64(window.FLIGHTSCOPE_PARTS[p.id])), mat(p.col));
+  m.userData = Object.assign({kind:'part'}, p); meshes[p.id] = m; byId[p.id] = m; root.add(m);
+}
+for (const e of EXTRAS) {
+  let g;
+  if (e.geom) g = e.geom;
+  else if (e.box) { g = new THREE.BoxGeometry(...e.box); g.translate(e.at[0] + e.box[0] / 2, e.at[1] + e.box[1] / 2, e.at[2] + e.box[2] / 2); }
+  else { g = new THREE.CylinderGeometry(e.cyl[0], e.cyl[0], e.cyl[1], 24); if (e.axis === 'x') g.rotateZ(Math.PI / 2); else if (e.axis === 'z') g.rotateX(Math.PI / 2); g.translate(...e.at); }
+  const m = new THREE.Mesh(g, mat(e.col, {roughness:e.screw ? 0.35 : 0.4, metalness:e.screw ? 0.7 : 0.3}));
+  m.userData = {kind:'extra', id:e.id, name:e.name, host:e.host}; byId[e.id] = m; root.add(m);
+}
+const cableMeshes = {};
+for (const c of CABLES) {
+  const m = new THREE.Mesh(new THREE.BufferGeometry(), mat(c.col, {roughness:0.7, metalness:0.0, side:THREE.DoubleSide}));
+  m.userData = {kind:'cable', id:c.id, name:c.name}; cableMeshes[c.id] = m; byId[c.id] = m; root.add(m);
+}
+function ribbonGeometry(curve, width, n){
+  const pts = curve.getPoints(n), pos = new Float32Array((n + 1) * 2 * 3), idx = [];
+  for (let i = 0; i <= n; i++) { const p = pts[i]; pos.set([p.x, p.y - width / 2, p.z, p.x, p.y + width / 2, p.z], i * 6); if (i < n) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+}
+function rebuildCables(t){
+  for (const c of CABLES) {
+    const pts = c.pts.map(([host, p]) => { const ex = PARTS.find(q => q.id === host).ex; return new THREE.Vector3(p[0] + ex[0] * t, p[1] + ex[1] * t, p[2] + ex[2] * t); });
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+    const m = cableMeshes[c.id]; m.geometry.dispose();
+    m.geometry = c.flat ? ribbonGeometry(curve, c.flat, 40) : new THREE.TubeGeometry(curve, 40, c.r, 10, false);
+  }
+}
+const bb = new THREE.Box3().setFromObject(meshes.front_shell); const centre = bb.getCenter(new THREE.Vector3()); centre.z += 30;
+// ---------- orbit / pan / zoom (mouse + touch) ----------
+const view = {target: centre.clone(), theta: -0.9, phi: 1.15, dist: 440};
+function home(){ view.target.copy(centre); view.theta = -0.9; view.phi = 1.15; view.dist = 440; }
+function applyCamera(){
+  const s = Math.sin(view.phi);
+  camera.position.set(view.target.x + view.dist * s * Math.sin(view.theta), view.target.y + view.dist * Math.cos(view.phi), view.target.z + view.dist * s * Math.cos(view.theta));
+  camera.lookAt(view.target);
+}
+const el = renderer.domElement; let drag = null, pinch = null;
+el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); drag = {x:e.clientX, y:e.clientY, b:e.button, moved:0, shift:e.shiftKey}; });
+el.addEventListener('pointermove', e => {
+  if (!drag || pinch) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy);
+  if (drag.b === 2 || drag.b === 1 || drag.shift) { pan(dx, dy); } else { view.theta -= dx * 0.006; view.phi = Math.min(3.0, Math.max(0.15, view.phi - dy * 0.006)); }
+});
+el.addEventListener('pointerup', e => { if (drag && drag.moved < 6) pick(e.clientX, e.clientY); drag = null; });
+el.addEventListener('contextmenu', e => e.preventDefault());
+el.addEventListener('wheel', e => { e.preventDefault(); view.dist = Math.min(2000, Math.max(60, view.dist * (1 + Math.sign(e.deltaY) * 0.1))); }, {passive:false});
+function pan(dx, dy){ const k = view.dist * 0.0016; const right = new THREE.Vector3(), up = new THREE.Vector3(); camera.matrix.extractBasis(right, up, new THREE.Vector3()); view.target.addScaledVector(right, -dx * k).addScaledVector(up, dy * k); }
+el.addEventListener('touchstart', e => { if (e.touches.length === 2) { const [a, b] = e.touches; pinch = {d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), x:(a.clientX + b.clientX) / 2, y:(a.clientY + b.clientY) / 2}; } }, {passive:true});
+el.addEventListener('touchmove', e => { if (pinch && e.touches.length === 2) { const [a, b] = e.touches; const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), x = (a.clientX + b.clientX) / 2, y = (a.clientY + b.clientY) / 2;
+  view.dist = Math.min(2000, Math.max(60, view.dist * pinch.d / d)); pan(x - pinch.x, y - pinch.y); pinch = {d, x, y}; } }, {passive:true});
+el.addEventListener('touchend', e => { if (e.touches.length < 2) pinch = null; }, {passive:true});
+// ---------- explode / xray / selection ----------
+const slider = document.getElementById('explode'); let t = 1, tGoal = 1;
+slider.addEventListener('input', () => { t = tGoal = +slider.value; });
+document.getElementById('btnAssemble').onclick = () => { tGoal = 0; };
+document.getElementById('btnExplode').onclick = () => { tGoal = 1; };
+document.getElementById('btnReset').onclick = home;
+const xray = document.getElementById('xray');
+let selected = null;
+const list = document.getElementById('parts'), wires = document.getElementById('wires'), hud = document.getElementById('hud');
+function row(container, id, n, name, note, onToggle){
+  const li = document.createElement('li'); li.dataset.id = id;
+  li.innerHTML = `<input type="checkbox" checked aria-label="show ${name}"><span class="num ${n ? '' : 'blank'}">${n || '·'}</span><div><div class="pname">${name}</div>${note ? `<div class="pnote">${note}</div>` : ''}</div>`;
+  li.querySelector('input').addEventListener('change', e => { onToggle(e.target.checked); e.stopPropagation(); });
+  li.addEventListener('click', e => { if (e.target.tagName !== 'INPUT') select(id); });
+  container.appendChild(li);
+}
+for (const p of PARTS) row(list, p.id, p.n, p.name, p.note, v => { meshes[p.id].visible = v; for (const e of EXTRAS) if (e.host === p.id) byId[e.id].visible = v; });
+for (const c of CABLES) row(wires, c.id, '', c.name, '', v => { cableMeshes[c.id].visible = v; });
+const screwList = document.getElementById('screws');
+for (const s of [...INSERTS, ...SCREWS]) row(screwList, s.id, '', s.name, '', v => { byId[s.id].visible = v; });
+function select(id){
+  selected = (selected === id) ? null : id;
+  for (const li of [...list.children, ...wires.children, ...screwList.children]) li.classList.toggle('sel', li.dataset.id === selected);
+  if (selected) { const u = byId[selected].userData; hud.innerHTML = `<b>${u.n ? u.n + ' · ' : ''}${u.name}</b>${u.note ? '<br>' + u.note : ''}`; hud.style.display = 'block'; }
+  else hud.style.display = 'none';
+}
+const ray = new THREE.Raycaster();
+function pick(cx, cy){
+  const r = el.getBoundingClientRect(); const v = new THREE.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(v, camera);
+  const cands = root.children.filter(m => m.visible && !(xray.checked && m.userData.printed && m.material.opacity < 0.5));
+  const hits = ray.intersectObjects(cands);
+  select(hits.length ? hits[0].object.userData.id : null);
+}
+window.addEventListener('keydown', e => { if (e.key === 'Escape') select(null); });
+document.getElementById('menu').onclick = () => document.getElementById('side').classList.toggle('open');
+// ---------- loop ----------
+function resize(){ const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+window.addEventListener('resize', resize); resize();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; let lastT = -1;
+function frame(){
+  t += (tGoal - t) * (reduce ? 1 : 0.12); if (Math.abs(tGoal - t) < 0.002) t = tGoal; slider.value = t;
+  for (const p of PARTS) {
+    const m = meshes[p.id]; m.position.set(p.ex[0] * t, p.ex[1] * t, p.ex[2] * t);
+    const sel = selected === p.id; const base = p.printed && xray.checked ? 0.32 : 1;
+    m.material.opacity = sel ? Math.max(base, 0.9) : base; m.material.depthWrite = m.material.opacity > 0.5;
+    m.material.emissive.setHex(sel ? 0x7a4a00 : 0x000000);
+  }
+  for (const e of EXTRAS) { const ex = PARTS.find(q => q.id === e.host).ex; const m = byId[e.id]; m.position.set(ex[0] * t, ex[1] * t, ex[2] * t); m.material.emissive.setHex(selected === e.id ? 0x7a4a00 : 0x000000); }
+  if (t !== lastT) { rebuildCables(t); lastT = t; }
+  for (const c of CABLES) cableMeshes[c.id].material.emissive.setHex(selected === c.id ? 0x7a4a00 : 0x000000);
+  applyCamera(); renderer.render(scene, camera); requestAnimationFrame(frame);
+}
+home(); frame();
+})();
+</script>

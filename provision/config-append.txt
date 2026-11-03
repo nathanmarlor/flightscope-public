@@ -1,0 +1,22 @@
+
+# ---- Flightscope Mk I ----
+# Waveshare 4.3" 800x480 DSI panel + its ft5406 touch (vc4-kms-v3d is already on above).
+# NB: the generic waveshare-panel overlay has no 4.3" entry and falls back to 1280x800.
+dtoverlay=vc4-kms-dsi-waveshare-800x480
+
+# free the PL011 UART from Bluetooth so the GPS gets a real serial port
+dtoverlay=disable-bt
+enable_uart=1
+
+# I2S audio for the MAX98357A; onboard audio off so the DAC is card 0
+dtparam=audio=off
+dtoverlay=hifiberry-dac
+
+# fuel gauge on the UPS HAT
+dtparam=i2c_arm=on
+
+# nothing on HDMI, ever - it is the loudest clock on the board
+hdmi_blanking=2
+
+# no rainbow square at power-on
+disable_splash=1

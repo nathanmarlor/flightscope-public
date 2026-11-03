@@ -1,0 +1,25 @@
+[Unit]
+Description=Flightscope handheld flight radar
+After=systemd-user-sessions.service
+Conflicts=getty@tty1.service
+
+[Service]
+User=pi
+Group=pi
+SupplementaryGroups=video render input
+WorkingDirectory=/home/pi/flightscope
+Environment=FLIGHTSCOPE_DISPLAY=fb
+Environment=SDL_VIDEODRIVER=dummy
+Environment=PYTHONUNBUFFERED=1
+Environment=FLIGHTSCOPE_DEBUG=1
+# fbcon stays bound (it is what flushes /dev/fb0 to the panel); hide its cursor and put the boot picture back over
+# any console text while Python starts (flightscope-bootsplash.service shows it first)
+ExecStartPre=+/bin/sh -c 'echo 1 > /sys/class/vtconsole/vtcon1/bind 2>/dev/null; printf "\033[?25l\033[2J" > /dev/tty1; [ -f /data/cache/bootsplash.fb ] && cat /data/cache/bootsplash.fb > /dev/fb0; true'
+ExecStartPre=+/bin/sh -c 'grep -q ft5x06 /proc/bus/input/devices || echo 10-0038 > /sys/bus/i2c/drivers/edt_ft5x06/bind 2>/dev/null; true'
+ExecStart=/home/pi/venv/bin/python -m flightscope
+ExecStopPost=+/bin/sh -c 'printf "\033[?25h" > /dev/tty1'
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

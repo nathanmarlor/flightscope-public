@@ -1,0 +1,10 @@
+[Unit]
+Description=Ethernet port off (handheld, never cabled: the PHY powers down)
+After=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/ip link set eth0 down
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: true
+      optional: true
+  # WiFi: uncomment and fill in to join the house network on first boot.
+  # wifis:
+  #   renderer: NetworkManager
+  #   wlan0:
+  #     dhcp4: true
+  #     optional: true
+  #     regulatory-domain: "GB"
+  #     access-points:
+  #       "YOUR-SSID":
+  #         password: "YOUR-PASSWORD"

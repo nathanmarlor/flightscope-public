@@ -1,0 +1,14 @@
+# generated / local
+__pycache__/
+*.pyc
+case/.venv/
+case/out/parts/
+case/out/*_raw.png
+case/out/*.svg
+# raw Natural Earth + OurAirports downloads (see README for sources)
+/data/
+# vendor reference material (Waveshare STEP/schematics, Pi drawings) - not ours to redistribute
+case/ref/
+# device-side state never lives here
+*.log
+/tmp/

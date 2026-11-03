@@ -1,0 +1,383 @@
+<title>Flightscope Measurement Sheet</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{--bg:#f6f7f5;--panel:#ffffff;--ink:#1b242c;--ink2:#3d4a55;--muted:#66727c;--rule:#d9dee2;--rule2:#eceff1;--accent:#e8890f;--accent-ink:#8a4d00;--ok:#2f9e5a;--ok-bg:#e6f4ea;--chip:#eef1f3;
+  --f:'Nunito','Segoe UI',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f161d;--panel:#16202a;--ink:#e7ecf0;--ink2:#c3cdd5;--muted:#8d9ba7;--rule:#283542;--rule2:#1e2933;--accent:#f0a24a;--accent-ink:#f6cd93;--ok:#4cc27a;--ok-bg:#173324;--chip:#1f2b36}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f161d;--panel:#16202a;--ink:#e7ecf0;--ink2:#c3cdd5;--muted:#8d9ba7;--rule:#283542;--rule2:#1e2933;--accent:#f0a24a;--accent-ink:#f6cd93;--ok:#4cc27a;--ok-bg:#173324;--chip:#1f2b36}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.45}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:0 60px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--rule);padding-block:14px 12px}
+header.top .wrap{padding-block:0}
+.hrow{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px}
+h1{font-size:22px;margin:0;font-weight:900;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13.5px}
+.prog{display:flex;align-items:center;gap:10px;margin-top:10px;font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.bar{flex:1;height:6px;background:var(--rule2);border-radius:3px;overflow:hidden;max-width:420px}
+.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+.sync{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.sync.err{color:var(--accent-ink)}
+.intro{margin-block:18px 8px;max-width:64ch;color:var(--ink2)}
+.intro p{margin:0 0 8px}
+.intro kbd{font-family:var(--mono);font-size:12.5px;background:var(--chip);padding:1px 6px;border-radius:4px}
+section.grp{margin-top:34px;border-top:2px solid var(--rule);padding-top:16px}
+.ghead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.ghead h2{font-size:19px;margin:0;font-weight:900}
+.ghead .count{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.ghead .part{color:var(--muted);font-size:13.5px}
+.gbody{display:grid;grid-template-columns:320px 1fr;gap:22px;margin-top:12px;align-items:start}
+@media (max-width:800px){.gbody{grid-template-columns:1fr}}
+.dia{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:10px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 96px)}
+@media (max-width:800px){.dia{position:static}}
+.dia svg{width:100%;height:auto;display:block;color:var(--ink2)}
+.dia .cap{font-size:12.5px;color:var(--muted);margin:8px 2px 0;line-height:1.4}
+.rows{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:34px 1fr 78px 118px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--rule2)}
+.row.note{grid-template-columns:34px 1fr 78px 118px}
+@media (max-width:560px){.row,.row.note{grid-template-columns:34px 1fr;row-gap:6px}.row .nom{grid-column:2}.row .in{grid-column:2}}
+.key{width:28px;height:28px;border-radius:7px;background:var(--chip);color:var(--ink);font-family:var(--mono);font-weight:600;font-size:13px;display:grid;place-items:center}
+.row.done .key{background:var(--ok-bg);color:var(--ok)}
+.name{font-weight:800;font-size:14.5px}
+.name .must{display:inline-block;margin-left:6px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);background:color-mix(in srgb,var(--accent) 16%,transparent);padding:1px 6px;border-radius:4px;vertical-align:middle}
+.how{color:var(--muted);font-size:13px;line-height:1.35}
+.nom{font-family:var(--mono);font-size:12.5px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.nom b{display:block;color:var(--ink2);font-weight:600;font-size:13px}
+.in{position:relative;display:flex;align-items:center;gap:6px}
+.in input{width:100%;font:600 15px var(--mono);padding:7px 30px 7px 10px;border:1.5px solid var(--rule);border-radius:8px;background:var(--panel);color:var(--ink);font-variant-numeric:tabular-nums}
+.in input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.in .u{position:absolute;right:10px;font-family:var(--mono);font-size:11.5px;color:var(--muted);pointer-events:none}
+.in.text input{padding-right:10px;font-family:var(--f);font-weight:700}
+.row .memo{grid-column:2 / -1;display:flex;gap:8px;align-items:center}
+.memo input{flex:1;font:400 13px var(--f);padding:5px 9px;border:1px dashed var(--rule);border-radius:7px;background:transparent;color:var(--ink)}
+.memo input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.state{font-family:var(--mono);font-size:11px;color:var(--muted);min-width:44px;text-align:right}
+.state.ok{color:var(--ok)}
+.foot{margin-top:40px;padding:16px 18px;border:1px solid var(--rule);border-radius:10px;background:var(--panel);display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.foot p{margin:0;color:var(--ink2);flex:1;min-width:240px}
+button{font:800 14px var(--f);padding:9px 14px;border-radius:8px;border:1.5px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)} button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+textarea.dump{width:100%;margin-top:12px;font:12.5px var(--mono);min-height:140px;border:1px solid var(--rule);border-radius:8px;background:var(--bg);color:var(--ink);padding:10px}
+.dim{stroke:var(--accent);fill:none;stroke-width:1.2}
+.dimt{fill:var(--accent);font:600 10px var(--mono)}
+.part{stroke:currentColor;fill:none;stroke-width:1.3}
+.partf{fill:color-mix(in srgb,currentColor 10%,transparent);stroke:currentColor;stroke-width:1.3}
+.lab{fill:currentColor;font:700 9.5px var(--f)}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="hrow"><h1>Flightscope Measurement Sheet</h1><span class="sub">calipers in mm · grey = what the model uses now</span></div>
+  <div class="prog"><span id="pcount">0 / 0</span><div class="bar"><i id="pbar"></i></div><span id="pmust">must-haves 0 / 0</span><span class="sync" id="sync">connecting…</span></div>
+</div></header>
+
+<div class="wrap">
+  <div class="intro">
+    <p>Letters on each drawing match the rows beside it. The grey number is what the model assumes today; type what the calipers say (two decimals is plenty). Rows marked <span class="name"><span class="must" style="margin:0">must</span></span> are the ones that decide whether parts fit; the rest just tidy things up.</p>
+    <p>Measure the largest extent of a thing unless the row says otherwise. Values save as you type and I read them back from here, so there's nothing to send.</p>
+  </div>
+  <div id="groups"></div>
+  <div class="foot">
+    <p>Finished, or done for now? Just say so in the chat and I'll pull these in and regenerate the case. If saving ever shows an error above, <b>Copy as text</b> and paste it to me instead.</p>
+    <button id="copy" type="button">Copy as text</button>
+  </div>
+  <textarea class="dump" id="dump" hidden readonly aria-label="Measurements as text"></textarea>
+</div>
+
+<script>
+(function(){
+// ---------- the sheet ----------
+// key = the constant in flightscope_case.py (or the new one it will become). nom = today's assumption.
+const GROUPS = [
+ {id:'display', title:'Display module', part:'Waveshare 4.3" DSI LCD, glass + PCB as one unit', items:[
+  {k:'DISPLAY_W', l:'A', n:'Overall width', h:'Widest point, glass edge to glass edge, left to right', nom:106, must:true},
+  {k:'DISPLAY_H', l:'B', n:'Overall height', h:'Tallest point, top to bottom', nom:67.7, must:true},
+  {k:'ACTIVE_W', l:'C', n:'Picture width', h:'Lit area only, left to right (turn it on, measure the light)', nom:95, must:true},
+  {k:'ACTIVE_H', l:'D', n:'Picture height', h:'Lit area only, top to bottom', nom:54, must:true},
+  {k:'ACTIVE_LEFT', l:'E', n:'Left border', h:'Glass left edge to the left edge of the picture', nom:5, must:true},
+  {k:'ACTIVE_TOP', l:'F', n:'Top border', h:'Glass top edge to the top edge of the picture', nom:4, must:true},
+  {k:'DISPLAY_GLASS_T', l:'G', n:'Glass proud of PCB', h:'Front face of glass to the front face of the PCB', nom:6.5, must:true},
+  {k:'DISPLAY_PCB_T', l:'H', n:'PCB thickness', h:'Bare board edge', nom:1.6},
+  {k:'DISPLAY_REAR_H', l:'I', n:'Tallest thing on the back', h:'Back face of PCB to the top of the corner standoffs (or whatever is tallest)', nom:4, must:true},
+  {k:'DISPLAY_HOLE_IN_X', l:'J', n:'Hole inset, along', h:'Corner standoff centre to the nearest short (left/right) edge', nom:3, must:true},
+  {k:'DISPLAY_HOLE_IN_Y', l:'K', n:'Hole inset, up', h:'Corner standoff centre to the nearest long (top/bottom) edge', nom:3, must:true},
+  {k:'DISPLAY_HOLE_D', l:'', n:'Standoff thread', h:'Bolt size that fits the corner standoffs, e.g. 2.5 for M2.5, 3 for M3', nom:2.5},
+  {k:'DSI_X', l:'L', n:'DSI socket from left', h:'Back view: left edge of PCB to the near end of the ribbon socket', nom:1.5},
+  {k:'DSI_Y', l:'M', n:'DSI socket from bottom', h:'Back view: bottom edge of PCB to the socket', nom:24},
+  {k:'DSI_LEN', l:'N', n:'DSI socket length', h:'Along its long side', nom:20},
+  {k:'DSI_H', l:'O', n:'DSI socket height', h:'Back face of PCB to the top of the socket, ribbon fitted', nom:6},
+ ]},
+ {id:'stack', title:'Pi + UPS stack', part:'Raspberry Pi 4 on the UPS HAT (D), cells fitted', items:[
+  {k:'HAT_STANDOFF_END', l:'A', n:'Stud end depth', h:'Back face of the HAT PCB to the end of a 25 mm hex stud', nom:26.6, must:true},
+  {k:'HAT_CELL_DEPTH', l:'B', n:'Cell depth', h:'Back face of the HAT PCB to the outermost surface of a fitted cell or its holder, whichever is further', nom:23.7, must:true},
+  {k:'HAT_PI_GAP', l:'C', n:'HAT to Pi gap', h:'Top face of the HAT PCB to the bottom face of the Pi PCB (the 9 mm standoffs)', nom:9},
+  {k:'PI_COMP_H', l:'D', n:'Tallest thing on the Pi', h:'Top face of the Pi PCB to the top of the USB/Ethernet block', nom:16, must:true},
+  {k:'HAT_USBC_X', l:'E', n:'HAT USB-C from SD end', h:'Along the port edge: the Pi’s SD-card end of the board to the centre of the HAT’s USB-C socket', nom:15.75},
+ ]},
+ {id:'dongle', title:'Pro Stick + USB', part:'FlightAware Pro Stick Plus, the right-angle SMA pigtail and the USB ribbon extension', items:[
+  {k:'DONGLE_L', l:'A', n:'Body length', h:'Plastic body only, not the USB plug or the SMA jack', nom:70, must:true},
+  {k:'DONGLE_W', l:'B', n:'Body width', h:'Across the wide face', nom:30.4, must:true},
+  {k:'DONGLE_T', l:'C', n:'Body thickness', h:'Thinnest dimension', nom:13.8, must:true},
+  {k:'DONGLE_PLUG', l:'D', n:'USB plug beyond body', h:'Body end to the tip of the USB-A plug', nom:13, must:true},
+  {k:'SMA_JACK', l:'E', n:'SMA jack beyond body', h:'Body end to the end of the SMA thread', nom:10, must:true},
+  {k:'SMA_JACK_D', l:'F', n:'SMA jack diameter', h:'Outer diameter of the hex/thread', nom:6.3},
+  {k:'SMA_JACK_OFF', l:'G', n:'SMA jack centre from wide face', h:'Lay it flat: table to the centre of the jack', nom:6.5},
+  {k:'ANT_PLUG_L', l:'H', n:'Antenna plug beyond the stick', h:'Antenna lead screwed onto the stick’s jack: stick body end face to where the lead’s neck starts (nut + plug body)', nom:12, must:true},
+  {k:'ANT_LEAD_D', l:'H2', n:'Antenna lead neck diameter', h:'The lead/boot just past the plug — it passes through a 6.6 mm wall slot', nom:5, must:true},
+  {k:'ANT_NUT_D', l:'H3', n:'Antenna plug nut diameter', h:'Across the knurled nut (sits between two 9.5 mm-apart pillars)', nom:8.5},
+  {k:'USB_SOCKET_L', l:'I', n:'Ribbon socket, length', h:'USB ribbon’s female socket: mouth to back, along the plug axis', nom:14.5, must:true},
+  {k:'USB_SOCKET_W', l:'J', n:'Ribbon socket, width', h:'Across the mouth', nom:13.3, must:true},
+  {k:'USB_SOCKET_T', l:'K', n:'Ribbon socket, height', h:'Including the ribbon under it', nom:5.8, must:true},
+  {k:'USB_FPC_PLUG', l:'L', n:'Ribbon plug, stiff length', h:'Plugged into the Pi: port face to where the ribbon can bend', nom:6, must:true},
+  {k:'USB_FEMALE', l:'', n:'Female block beyond the plug tip', h:'The right-angle block on the stick\'s plug: how far it reaches past the end of the stick\'s plug', nom:9.9},
+  {k:'USB_FEMALE_H', l:'', n:'Female block height', h:'Across the stick\'s width (the face the lead leaves is one end of this)', nom:20, must:true},
+  {k:'USB_FEMALE_T', l:'', n:'Female block depth', h:'Across the stick\'s thickness', nom:14, must:true},
+  {k:'USB_ELBOW', l:'', n:'Elbow beyond the Pi edge', h:'', nom:22},
+  {k:'USB_ELBOW_W', l:'', n:'Elbow width', h:'', nom:17},
+ ]},
+ {id:'charge', title:'Charging socket', part:'BTFO panel-mount USB-C extension + the rigid right-angle adapter on the HAT', items:[
+  {k:'USBC_FLANGE_W', l:'A', n:'Flange width', h:'The plate with the screw holes, long way', nom:24, must:true},
+  {k:'USBC_FLANGE_H', l:'B', n:'Flange height', h:'Short way', nom:14, must:true},
+  {k:'USBC_HOLE_SPACING', l:'C', n:'Hole spacing', h:'Centre to centre', nom:17.5, must:true},
+  {k:'USBC_HOLE_D', l:'D', n:'Hole diameter', h:'Or the thread of the screws it came with', nom:2.5, must:true},
+  {k:'USBC_FLANGE_T', l:'E', n:'Flange thickness', h:'', nom:1.5},
+  {k:'USBC_BODY_W', l:'F', n:'Body width', h:'The part that pokes through the panel, long way', nom:13, must:true},
+  {k:'USBC_BODY_H', l:'G', n:'Body height', h:'Short way', nom:8, must:true},
+  {k:'USBC_BODY_D', l:'H', n:'Body depth', h:'Front of the flange to the front face of the socket (how far it sticks out of the panel)', nom:6, must:true},
+  {k:'USBC_REAR_D', l:'I', n:'Depth behind the flange', h:'Back of the flange to where the cable bends freely', nom:14, must:true},
+  {k:'USBC_ELBOW_L', l:'J', n:'Right-angle adapter, length', h:'The rigid elbow on the HAT port, plug tip to socket face', nom:13},
+  {k:'USBC_ELBOW_W', l:'K', n:'Right-angle adapter, width', h:'', nom:9},
+  {k:'USBC_ELBOW_H', l:'L', n:'Right-angle adapter, thickness', h:'', nom:9},
+ ]},
+ {id:'sma', title:'Antenna bulkhead', part:'SMA bulkhead adapter in the top wall, pigtail to the Pro Stick', items:[
+  {k:'SMA_THREAD_D', l:'A', n:'Thread diameter', h:'Across the threaded part', nom:6.35, must:true},
+  {k:'SMA_FLAT_W', l:'B', n:'Across the flat', h:'If the thread has a D-flat: flat to opposite side', nom:5.8},
+  {k:'SMA_NUT_AF', l:'C', n:'Nut across flats', h:'', nom:8},
+  {k:'SMA_BEHIND', l:'D', n:'Inside length', h:'Back of the panel flange/shoulder to the far end (the pigtail side)', nom:12, must:true},
+  {k:'SMA_PIGTAIL', l:'E', n:'Pigtail length', h:'Connector to connector', nom:150},
+ ]},
+ {id:'switch', title:'Power switch', part:'12 mm latching push switch in the top wall', items:[
+  {k:'BTN_HOLE', l:'A', n:'Panel hole', h:'Thread outer diameter (the hole it needs)', nom:12, must:true},
+  {k:'BTN_BODY_D', l:'B', n:'Body diameter behind panel', h:'Widest part behind the panel, ring nut off', nom:14, must:true},
+  {k:'BTN_DEPTH', l:'C', n:'Depth behind panel', h:'Back of the panel to the tips of the terminals', nom:24, must:true},
+  {k:'BTN_NUT_OD', l:'D', n:'Ring nut diameter', h:'', nom:20},
+  {k:'BTN_HEAD_OD', l:'E', n:'Head diameter outside', h:'The bezel that sits against the outside of the panel', nom:18},
+  {k:'BTN_HEAD_H', l:'F', n:'Head height outside', h:'Panel face to the top of the button', nom:8},
+ ]},
+ {id:'gps', title:'GPS board', part:'Adafruit Ultimate GPS Breakout, wires soldered', items:[
+  {k:'GPS_W', l:'A', n:'Board width', h:'Short side', nom:25.5, must:true},
+  {k:'GPS_H', l:'B', n:'Board height', h:'Long side', nom:35, must:true},
+  {k:'GPS_HOLE_SPACING', l:'C', n:'Hole spacing along the long side', h:'Centre to centre of the two holes on one long edge (one in each corner)', nom:29, must:true},
+  {k:'GPS_HOLE_IN_END', l:'D', n:'Hole inset from the end', h:'Hole centre to the nearest short edge', nom:3, must:true},
+  {k:'GPS_HOLE_IN_SIDE', l:'E', n:'Hole inset from the side', h:'Hole centre to the nearest long edge', nom:3, must:true},
+  {k:'GPS_HOLE_D', l:'F', n:'Hole diameter', h:'', nom:2.5},
+  {k:'GPS_PATCH_T', l:'G', n:'Patch height', h:'PCB face to the top of the ceramic patch', nom:4.5, must:true},
+  {k:'GPS_BACK_H', l:'H', n:'Tallest thing on the back', h:'PCB back face to the highest component (coin cell holder, or your solder joints)', nom:3.5, must:true},
+  {k:'GPS_HEADER_EDGE', l:'', n:'Which edge are the wires on?', h:'Short edge or long edge; and whether the hot glue covers the two holes next to them on the patch side', nom:'', text:true},
+ ]},
+ {id:'fasteners', title:'Fasteners & cells', part:'The bits from the parts box', items:[
+  {k:'INSERT_OD', l:'A', n:'Heat-set insert, outside diameter', h:'Across the knurl', nom:3.5, must:true},
+  {k:'INSERT_L', l:'B', n:'Heat-set insert, length', h:'', nom:4},
+  {k:'SCREW_HEAD_D', l:'C', n:'M2.5 pan head diameter', h:'', nom:4.7},
+  {k:'SCREW_HEAD_H', l:'D', n:'M2.5 pan head height', h:'', nom:1.9},
+  {k:'CELL_D', l:'E', n:'21700 cell diameter', h:'', nom:21.4},
+  {k:'CELL_L', l:'F', n:'21700 cell length', h:'', nom:70.6},
+ ]},
+];
+
+// ---------- drawings: simple views with lettered dimension lines ----------
+function dim(x1,y1,x2,y2,letter,side){ // side: 'h' (label above) or 'v' (label left)
+  const mx=(x1+x2)/2,my=(y1+y2)/2, tx = side==='v'? x1-6 : mx, ty = side==='v'? my+3.5 : y1-4;
+  const tick = side==='v'? `M${x1-3},${y1}h6M${x2-3},${y2}h6` : `M${x1},${y1-3}v6M${x2},${y2-3}v6`;
+  return `<path class="dim" d="M${x1},${y1}L${x2},${y2}${tick}"/><text class="dimt" x="${tx}" y="${ty}" text-anchor="${side==='v'?'end':'middle'}">${letter}</text>`;
+}
+const DIA = {
+ display: `<svg viewBox="0 0 300 250" role="img" aria-label="Display: front, side and back views">
+  <text class="lab" x="10" y="14">FRONT</text>
+  <rect class="partf" x="30" y="30" width="202" height="128" rx="3"/>
+  <rect class="part" x="42" y="46" width="180" height="104"/>
+  ${dim(30,22,232,22,'A','h')}${dim(22,30,22,158,'B','v')}
+  ${dim(42,170,222,170,'C','h')}${dim(246,46,246,150,'D','v')}
+  ${dim(30,182,42,182,'E','h')}${dim(258,30,258,46,'F','v')}
+  <text class="lab" x="10" y="208">SIDE</text>
+  <rect class="partf" x="30" y="214" width="160" height="6"/><rect class="partf" x="30" y="220" width="160" height="5"/>
+  <rect class="part" x="40" y="225" width="6" height="14"/><rect class="part" x="174" y="225" width="6" height="14"/>
+  ${dim(200,214,200,220,'G','v')}${dim(214,220,214,225,'H','v')}${dim(228,225,228,239,'I','v')}
+  <text class="lab" x="240" y="208">BACK ↓</text>
+  </svg>
+  <svg viewBox="0 0 300 150" role="img" aria-label="Display back view">
+  <text class="lab" x="10" y="14">BACK</text>
+  <rect class="partf" x="30" y="22" width="202" height="118" rx="3"/>
+  <circle class="part" cx="42" cy="34" r="3"/><circle class="part" cx="220" cy="34" r="3"/><circle class="part" cx="42" cy="128" r="3"/><circle class="part" cx="220" cy="128" r="3"/>
+  ${dim(30,48,42,48,'J','h')}${dim(56,22,56,34,'K','v')}
+  <rect class="part" x="48" y="70" width="14" height="40"/>
+  ${dim(30,120,48,120,'L','h')}${dim(72,110,72,140,'M','v')}${dim(84,70,84,110,'N','v')}
+  <text class="lab" x="100" y="94">DSI socket · O = its height</text>
+  </svg>`,
+ stack: `<svg viewBox="0 0 300 170" role="img" aria-label="Stack side view">
+  <text class="lab" x="10" y="14">SIDE (screen is up)</text>
+  <rect class="partf" x="40" y="30" width="200" height="5"/><text class="lab" x="246" y="35">Pi</text>
+  <rect class="part" x="150" y="14" width="40" height="16"/>
+  <rect class="part" x="52" y="35" width="6" height="18"/><rect class="part" x="222" y="35" width="6" height="18"/>
+  <rect class="partf" x="40" y="53" width="200" height="5"/><text class="lab" x="246" y="58">HAT</text>
+  <rect class="part" x="70" y="58" width="140" height="46" rx="4"/><text class="lab" x="118" y="85">cells</text>
+  <rect class="part" x="52" y="58" width="6" height="52"/><rect class="part" x="222" y="58" width="6" height="52"/>
+  ${dim(20,14,20,30,'D','v')}${dim(20,35,20,53,'C','v')}${dim(262,58,262,104,'B','v')}${dim(284,58,284,110,'A','v')}
+  <text class="lab" x="10" y="140">E: along the port edge, SD end → USB-C centre (top view)</text>
+  </svg>`,
+ dongle: `<svg viewBox="0 0 300 230" role="img" aria-label="Pro Stick views">
+  <text class="lab" x="10" y="14">TOP</text>
+  <rect class="part" x="26" y="40" width="14" height="8"/><rect class="partf" x="40" y="26" width="190" height="36" rx="4"/><rect class="part" x="230" y="34" width="24" height="20"/>
+  ${dim(40,18,230,18,'A','h')}${dim(268,26,268,62,'B','v')}${dim(230,72,254,72,'D','h')}${dim(26,72,40,72,'E','h')}${dim(14,40,14,48,'F','v')}
+  <text class="lab" x="10" y="98">SIDE</text>
+  <rect class="part" x="26" y="112" width="14" height="5"/><rect class="partf" x="40" y="106" width="190" height="16"/><rect class="part" x="230" y="110" width="24" height="8"/>
+  ${dim(268,106,268,122,'C','v')}${dim(14,106,14,114,'G','v')}
+  <text class="lab" x="10" y="150">EXTENSION, female end</text>
+  <rect class="partf" x="26" y="158" width="52" height="22" rx="4"/><path class="part" d="M78,169h30"/>
+  ${dim(26,152,78,152,'H','h')}${dim(92,158,92,180,'I','v')}<text class="dimt" x="112" y="172">J = thickness</text>
+  <text class="lab" x="10" y="204">USB-A ELBOW on the Pi</text>
+  <rect class="part" x="26" y="212" width="80" height="4"/><text class="lab" x="30" y="226">Pi PCB</text>
+  <rect class="partf" x="106" y="196" width="30" height="20"/><path class="part" d="M116,196v-8"/>
+  ${dim(106,224,136,224,'K','h')}${dim(150,196,150,216,'L','v')}<text class="dimt" x="170" y="208">M = width</text>
+  </svg>`,
+ charge: `<svg viewBox="0 0 300 200" role="img" aria-label="Charging socket views">
+  <text class="lab" x="10" y="14">FLANGE, from outside</text>
+  <rect class="partf" x="40" y="26" width="150" height="70" rx="6"/><rect class="part" x="85" y="48" width="60" height="28" rx="8"/>
+  <circle class="part" cx="58" cy="61" r="5"/><circle class="part" cx="172" cy="61" r="5"/>
+  ${dim(40,18,190,18,'A','h')}${dim(30,26,30,96,'B','v')}${dim(58,110,172,110,'C','h')}${dim(85,124,145,124,'F','h')}${dim(204,48,204,76,'G','v')}
+  <text class="dimt" x="220" y="66">D = hole ⌀</text>
+  <text class="lab" x="10" y="150">SIDE</text>
+  <rect class="partf" x="40" y="158" width="8" height="34"/><rect class="part" x="48" y="166" width="60" height="18"/><rect class="part" x="20" y="168" width="20" height="14"/>
+  ${dim(20,198,40,198,'H','h')}${dim(48,198,108,198,'I','h')}${dim(44,150,44,156,'E','h')}
+  <text class="lab" x="130" y="176">J K L = the rigid elbow</text>
+  </svg>`,
+ sma: `<svg viewBox="0 0 300 110" role="img" aria-label="SMA bulkhead">
+  <text class="lab" x="10" y="14">SIDE, panel in grey</text>
+  <rect class="partf" x="120" y="20" width="6" height="70"/>
+  <rect class="part" x="60" y="44" width="60" height="22"/><rect class="part" x="126" y="40" width="22" height="30"/><rect class="part" x="148" y="46" width="30" height="18"/>
+  ${dim(148,34,178,34,'A','h')}${dim(190,46,190,64,'B','v')}${dim(136,80,136,80,'','h')}${dim(60,100,120,100,'D','h')}
+  <text class="dimt" x="126" y="86">C = nut</text><text class="lab" x="200" y="100">E = pigtail</text>
+  </svg>`,
+ switch: `<svg viewBox="0 0 300 120" role="img" aria-label="Power switch side view">
+  <text class="lab" x="10" y="14">SIDE, panel in grey</text>
+  <rect class="partf" x="120" y="14" width="6" height="94"/>
+  <rect class="part" x="126" y="36" width="12" height="50" rx="3"/><rect class="part" x="138" y="46" width="8" height="30"/>
+  <rect class="part" x="80" y="30" width="40" height="62"/><rect class="part" x="70" y="40" width="10" height="42"/><path class="part" d="M60,50h10M60,72h10"/>
+  ${dim(126,26,138,26,'F','h')}${dim(156,36,156,86,'E','v')}${dim(60,104,120,104,'C','h')}${dim(40,30,40,92,'B','v')}
+  <text class="dimt" x="180" y="60">A = panel hole · D = ring nut</text>
+  </svg>`,
+ gps: `<svg viewBox="0 0 300 190" role="img" aria-label="GPS board views">
+  <text class="lab" x="10" y="14">COMPONENT SIDE (patch behind)</text>
+  <rect class="partf" x="60" y="26" width="90" height="124" rx="3"/>
+  <circle class="part" cx="72" cy="38" r="3.5"/><circle class="part" cx="138" cy="38" r="3.5"/>
+  <rect class="part" x="70" y="118" width="70" height="8"/><text class="lab" x="72" y="142">wires / header</text>
+  ${dim(60,18,150,18,'A','h')}${dim(50,26,50,150,'B','v')}${dim(72,56,138,56,'C','h')}${dim(164,26,164,38,'D','v')}${dim(60,68,72,68,'E','h')}
+  <text class="dimt" x="180" y="60">F = hole ⌀</text>
+  <text class="lab" x="10" y="170">SIDE</text>
+  <rect class="partf" x="60" y="176" width="90" height="4"/><rect class="part" x="80" y="164" width="50" height="12"/><rect class="part" x="100" y="180" width="30" height="8"/>
+  ${dim(166,164,166,176,'G','v')}${dim(178,180,178,188,'H','v')}
+  </svg>`,
+ fasteners: `<svg viewBox="0 0 300 100" role="img" aria-label="Fasteners">
+  <rect class="partf" x="30" y="30" width="20" height="30"/>${dim(30,22,50,22,'A','h')}${dim(20,30,20,60,'B','v')}
+  <path class="partf" d="M90,40 q15,-14 30,0 z"/><rect class="part" x="102" y="40" width="6" height="30"/>${dim(90,30,120,30,'C','h')}${dim(130,26,130,40,'D','v')}
+  <rect class="partf" x="170" y="34" width="110" height="34" rx="6"/>${dim(170,26,280,26,'F','h')}${dim(160,34,160,68,'E','v')}
+  </svg>`,
+};
+
+// ---------- render ----------
+const all = []; GROUPS.forEach(g => g.items.forEach(it => { it.g = g.id; all.push(it); }));
+const host = document.getElementById('groups');
+for (const g of GROUPS) {
+  const sec = document.createElement('section'); sec.className = 'grp'; sec.id = g.id;
+  const rows = g.items.map(it => `
+    <div class="row" data-k="${it.k}">
+      <span class="key">${it.l || '·'}</span>
+      <div><div class="name">${it.n}${it.must ? '<span class="must">must</span>' : ''}</div>${it.h ? `<div class="how">${it.h}</div>` : ''}</div>
+      <div class="nom">${it.text ? '' : `now<b>${it.nom}</b>`}</div>
+      <div class="in ${it.text ? 'text' : ''}"><input id="in_${it.k}" ${it.text ? 'type="text" maxlength="40"' : 'type="number" step="0.01" inputmode="decimal"'} aria-label="${it.n}" placeholder="${it.text ? '' : '—'}">${it.text ? '' : '<span class="u">mm</span>'}</div>
+      <div class="memo"><input id="note_${it.k}" type="text" maxlength="120" placeholder="note (optional)" aria-label="Note for ${it.n}"><span class="state" id="st_${it.k}"></span></div>
+    </div>`).join('');
+  sec.innerHTML = `<div class="ghead"><h2>${g.title}</h2><span class="part">${g.part}</span><span class="count" id="cnt_${g.id}"></span></div>
+    <div class="gbody"><div class="dia">${DIA[g.id]}<div class="cap">Letters match the rows. Dashed-looking lines are the thing being measured.</div></div><div class="rows">${rows}</div></div>`;
+  host.appendChild(sec);
+}
+
+// ---------- state + saving ----------
+const state = {};                       // k -> {value, note}
+const syncEl = document.getElementById('sync');
+let db = null, saving = {}, pending = {}, timers = {};
+function draft(k, v){ try { localStorage.setItem('fs-measure:' + k, JSON.stringify(v)); } catch(e){} }
+function readDraft(k){ try { const s = localStorage.getItem('fs-measure:' + k); return s ? JSON.parse(s) : null; } catch(e){ return null; } }
+
+function paint(k){
+  const it = all.find(i => i.k === k), st = state[k] || {}, row = document.querySelector(`.row[data-k="${k}"]`);
+  const vi = document.getElementById('in_' + k), ni = document.getElementById('note_' + k);
+  if (document.activeElement !== vi) vi.value = st.value ?? '';
+  if (document.activeElement !== ni) ni.value = st.note ?? '';
+  const done = it.text ? !!(st.value && String(st.value).trim()) : (st.value !== null && st.value !== undefined && st.value !== '');
+  row.classList.toggle('done', done);
+}
+function progress(){
+  let n = 0, m = 0, mt = 0;
+  for (const it of all) { const st = state[it.k]; const done = st && st.value !== null && st.value !== undefined && st.value !== ''; if (done) n++; if (it.must) { mt++; if (done) m++; } }
+  document.getElementById('pcount').textContent = `${n} / ${all.length}`;
+  document.getElementById('pbar').style.width = (100 * n / all.length) + '%';
+  document.getElementById('pmust').textContent = `must-haves ${m} / ${mt}`;
+  for (const g of GROUPS) { const d = g.items.filter(i => state[i.k] && state[i.k].value !== null && state[i.k].value !== undefined && state[i.k].value !== '').length; document.getElementById('cnt_' + g.id).textContent = `${d} / ${g.items.length}`; }
+}
+async function flush(k){
+  if (saving[k]) { pending[k] = true; return; }
+  const st = state[k]; const el = document.getElementById('st_' + k);
+  if (!db) { el.textContent = 'draft'; el.className = 'state'; return; }
+  saving[k] = true; el.textContent = 'saving'; el.className = 'state';
+  try {
+    await db.collection('measurements').doc(k).set({ value: st.value ?? null, note: st.note ?? '', at: new Date().toISOString() });
+    el.textContent = 'saved'; el.className = 'state ok'; syncEl.textContent = 'saved'; syncEl.className = 'sync';
+  } catch (e) {
+    el.textContent = 'not saved'; el.className = 'state'; syncEl.textContent = 'saving failed — use Copy as text'; syncEl.className = 'sync err';
+  }
+  saving[k] = false;
+  if (pending[k]) { pending[k] = false; flush(k); }
+}
+function changed(k){
+  const it = all.find(i => i.k === k);
+  const raw = document.getElementById('in_' + k).value, note = document.getElementById('note_' + k).value;
+  const value = it.text ? raw.trim() : (raw === '' ? null : Number(raw));
+  state[k] = { value, note }; draft(k, state[k]); paint(k); progress();
+  clearTimeout(timers[k]); timers[k] = setTimeout(() => flush(k), 700);
+}
+for (const it of all) {
+  document.getElementById('in_' + it.k).addEventListener('input', () => changed(it.k));
+  document.getElementById('note_' + it.k).addEventListener('input', () => changed(it.k));
+  const d = readDraft(it.k); if (d) state[it.k] = d;
+  paint(it.k);
+}
+progress();
+
+document.getElementById('copy').addEventListener('click', async () => {
+  const lines = [];
+  for (const g of GROUPS) for (const it of g.items) { const st = state[it.k]; if (st && st.value !== null && st.value !== undefined && st.value !== '') lines.push(`${it.k} = ${st.value}${st.note ? '   # ' + st.note : ''}`); }
+  const txt = lines.join('\n') || '(nothing filled in yet)';
+  const ta = document.getElementById('dump'); ta.value = txt; ta.hidden = false;
+  try { await navigator.clipboard.writeText(txt); document.getElementById('copy').textContent = 'Copied'; }
+  catch (e) { ta.focus(); ta.select(); document.getElementById('copy').textContent = 'Select and copy'; }
+  setTimeout(() => document.getElementById('copy').textContent = 'Copy as text', 2500);
+});
+
+// ---------- shared store ----------
+(async () => {
+  db = await window.claude?.use?.('db') ?? null;
+  if (!db) { syncEl.textContent = 'not signed in: kept in this browser only'; return; }
+  try {
+    const snap = await db.collection('measurements').get();
+    for (const d of snap.docs) { const b = d.data() || {}; state[d.id] = { value: b.value ?? null, note: b.note ?? '' }; draft(d.id, state[d.id]); }
+    for (const it of all) paint(it.k); progress();
+    syncEl.textContent = snap.empty ? 'connected · nothing saved yet' : `connected · ${snap.size} saved`; syncEl.className = 'sync';
+    db.collection('measurements').onSnapshot(s => {                       // another tab or device typing
+      for (const c of s.docChanges()) { if (c.doc.metadata.hasPendingWrites) continue; const b = c.doc.data() || {}; state[c.doc.id] = { value: b.value ?? null, note: b.note ?? '' }; paint(c.doc.id); }
+      progress();
+    }, () => {});
+  } catch (e) { syncEl.textContent = 'could not load saved values'; syncEl.className = 'sync err'; }
+})();
+})();
+</script>
