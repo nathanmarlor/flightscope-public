@@ -24,6 +24,8 @@ class Aircraft:
     vr: int | None = None           # ft/min
     squawk: str = ""
     category: str = ""
+    military: bool = False          # tar1090-db flag (dbFlags bit 0), set by the feed
+    interesting: bool = False       # tar1090-db flag (dbFlags bit 1): notable or unusual aircraft
     dst: float | None = None        # NM from home
     dir: float | None = None        # bearing from home
     sources: set = field(default_factory=set)
@@ -105,6 +107,10 @@ class Fleet:
             if r.get("baro_rate") is not None: a.vr = int(r["baro_rate"])
             if r.get("squawk"): a.squawk = str(r["squawk"])
             if r.get("category"): a.category = str(r["category"])
+            if "dbFlags" in r:                                     # bitmask: 1 military, 2 interesting (4 PIA and 8 LADD are privacy flags, never shown)
+                try: fl = int(r["dbFlags"])
+                except (TypeError, ValueError): fl = 0
+                a.military, a.interesting = bool(fl & 1), bool(fl & 2)
             lat, lon = r.get("lat"), r.get("lon")
             if lat is not None and lon is not None:
                 tpos = now - float(r.get("seen_pos", 0) or 0)

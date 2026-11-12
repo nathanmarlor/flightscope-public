@@ -10,7 +10,7 @@ from ..geo import nm_xy
 from .. import names
 from ..touch import PINCH
 from ..world import World, lod_for
-from .kid import plane_art, Pill, Round, chip, chip_pair, draw_icon, pulse, route_line, ORANGE, GREEN, BLUE, RED, CHIP, OUTLINE
+from .kid import plane_art, Pill, Round, chip, chip_pair, draw_icon, draw_badge, pulse, route_line, ORANGE, GREEN, BLUE, RED, CHIP, OUTLINE
 
 MAP_PATH = Path(__file__).resolve().parent.parent / "data" / "map.json"
 W, H = 800, 480
@@ -570,7 +570,10 @@ class MapScreen:
                 poly = [(x + (px * ct - py * st) * sc, y + (px * st + py * ct) * sc) for px, py in PLANE]
                 pygame.draw.polygon(s, col, poly); pygame.draw.polygon(s, INK, poly, 1)
             r = int(12 * sc); placed.append(pygame.Rect(x - r, y - r, 2 * r, 2 * r))
-            if self.app.logbook.has(a.hex): draw_icon(s, "star", (x + 11 * sc, y - 11 * sc), ORANGE)
+            badge = "military" if a.military else "interesting" if a.interesting else None
+            if self.app.logbook.has(a.hex):                          # top right is the special badge's corner, so the logged star steps aside
+                draw_icon(s, "star", (x + (-11 if badge else 11) * sc, y - 11 * sc), ORANGE)
+            if badge: draw_badge(s, badge, (round(x + 11 * sc), round(y - 11 * sc)), max(4, round(5.5 * sc)))   # half the plane icon's size
             drawn.append((a, x, y, sc, is_sel))
         s.blit(trail, (0, 0))
         for a, x, y, sc, is_sel in drawn:                          # pass 2: names, avoiding everything so far
@@ -601,6 +604,8 @@ class MapScreen:
         """Zoomed right out there can be thousands: sprites only, no trails, names for the few nearest the middle."""
         for _, a, x, y in items:
             s.blit(self._sprite(a.heading(), a.alt, a.on_ground), (x - 9, y - 9))
+            if self.zoom <= 1500 and (a.military or a.interesting):          # not on the specks of the whole-country views
+                draw_badge(s, "military" if a.military else "interesting", (round(x + 7), round(y - 7)), 4)
         for _, a, x, y in items[:12]:
             r = pygame.Rect(x - 7, y - 7, 14, 14)
             if sel is not None and a.hex == sel.hex: pygame.draw.circle(s, ORANGE, (x, y), int(14 + 4 * pulse()), 3)

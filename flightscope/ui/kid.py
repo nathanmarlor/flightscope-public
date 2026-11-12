@@ -184,6 +184,23 @@ def draw_icon(s, kind, c, col=INK_SOFT):
     elif kind == "eye":
         pygame.draw.ellipse(s, col, (x - 10, y - 6, 20, 12), 2); pygame.draw.circle(s, col, (x, y), 3)
 
+MILITARY_OLIVE, INTEREST_YELLOW = (75, 90, 40), (255, 204, 0)
+
+def draw_badge(s, kind, c, r):
+    """Small round map badge of radius r centred on c: 'military' = white star on an olive disc,
+    'interesting' = dark exclamation mark on a yellow disc."""
+    x, y = c
+    pygame.draw.circle(s, MILITARY_OLIVE if kind == "military" else INTEREST_YELLOW, (x, y), r)
+    if kind == "military":
+        pts = [(x + (r * (0.78 if i % 2 == 0 else 0.32)) * math.cos(math.radians(-90 + i * 36)),
+                y + (r * (0.78 if i % 2 == 0 else 0.32)) * math.sin(math.radians(-90 + i * 36))) for i in range(10)]
+        pygame.draw.polygon(s, PAPER, pts)
+    else:
+        w = max(2, round(r * 0.34))
+        pygame.draw.rect(s, INK, (x - w // 2, y - round(r * 0.62), w, round(r * 0.72)))
+        pygame.draw.circle(s, INK, (x, y + round(r * 0.5)), max(1, round(r * 0.2)))
+    pygame.draw.circle(s, INK, (x, y), r, 1)
+
 def pulse(period=1.2, lo=0.0, hi=1.0):
     return lo + (hi - lo) * (0.5 + 0.5 * math.sin(time.time() * 2 * math.pi / period))
 

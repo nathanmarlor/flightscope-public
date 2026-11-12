@@ -12,3 +12,4 @@ case/ref/
 # device-side state never lives here
 *.log
 /tmp/
+.venv/

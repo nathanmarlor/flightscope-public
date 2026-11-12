@@ -8,8 +8,8 @@ CONFIG_PATH = Path(os.environ.get("FLIGHTSCOPE_CONFIG", Path.home() / ".config/f
 
 @dataclass
 class Config:
-    home_lat: float = 53.2333          # the bundled map's centre (north-west England); set yours from the GPS or with tools/build_map.py
-    home_lon: float = -2.2333
+    home_lat: float = 52.2380   # the bundled map's centre (north-west England); set yours from the GPS or with tools/build_map.py
+    home_lon: float = -7.0953
     range_nm: int = 40                  # starting scope range
     ranges: tuple = (10, 20, 40, 80, 150)
     fps: int = 20
